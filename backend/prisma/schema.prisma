@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PrayerSource {
+  manual
+  calculated
+}
+
+enum AdminRole {
+  admin
+  editor
+}
+
+model MosqueSettings {
+  id                 Int      @id @default(autoincrement())
+  name               String   @default("Masjid Salahuddin")
+  city               String   @default("Leicester")
+  country            String   @default("UK")
+  timezone           String   @default("Europe/London")
+  latitude           Float?
+  longitude          Float?
+  calculationMethod  String   @default("MWL")
+  madhab             String   @default("Shafii")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model PrayerTime {
+  id        Int         @id @default(autoincrement())
+  date      DateTime    @unique
+  fajr      DateTime
+  sunrise   DateTime
+  dhuhr     DateTime
+  asr       DateTime
+  maghrib   DateTime
+  isha      DateTime
+  source    PrayerSource @default(calculated)
+  locked    Boolean     @default(false)
+  notes     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  pinned    Boolean  @default(false)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DonationCampaign {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  currency      String   @default("GBP")
+  active        Boolean  @default(true)
+  presetAmounts Int[]
+  defaultAmount Int?
+  paymentLink   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AdminUser {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(admin)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  adminId   Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
